@@ -106,10 +106,18 @@ class RecipeIndex(Resource):
                 minutes_to_complete=minutes_to_complete,
                 user_id=user_id
             )
+
+            # 🔥 Force validators to run and catch ValueErrors before commit
             db.session.add(recipe)
+            db.session.flush()
             db.session.commit()
 
             return jsonify(recipe.to_dict()), 201
+
+        except ValueError as ve:
+            db.session.rollback()
+            return jsonify({"errors": [str(ve)]}), 422
+
         except Exception as e:
             db.session.rollback()
             return jsonify({"errors": [str(e)]}), 422
